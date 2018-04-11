@@ -1,0 +1,8 @@
+http://www.sqlitetutorial.net/sqlite-java/
+
+http://www.sqlitetutorial.net/sqlite-java/create-database/
+
+http://www.sqlitetutorial.net/sqlite-java/sqlite-jdbc-driver/
+
+https://www.javatpoint.com/java-jmenuitem-and-jmenu
+
