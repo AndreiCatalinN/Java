@@ -7,108 +7,83 @@
 
 package Jproj;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+//Imports
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Scanner;
+
 
 public class FileHandle {
-
+    //Attributes
     private String fileName;
-    private Scanner readF;
+    private FileInputStream fi;
 
     //Constructor
     public FileHandle(){
         fileName = "Open-Data-to-30-11-2016-for-Publication-v2.csv";
-        this.fileOpen();
-
-        readF.close();
     }
 
     //Opens the file
     private void fileOpen(){
         try{
-            readF = new Scanner(new File(fileName), "iso-8859-1");
+            fi = new FileInputStream(fileName);
         }
         catch(FileNotFoundException e) {
-            System.out.println(e.fillInStackTrace());
+            e.fillInStackTrace();
+        }
+    }
+
+    //writes to a temporary file from with i do another read
+    public String readByCharacter(){
+        char temp;
+        StringBuilder build = new StringBuilder();
+
+        this.fileOpen();
+        try{
+            //Cleans the commas from fields with quotes
+            //Ex if i have "Andrei, here it is" it becomes "Andrei here it is"
+            while (fi.available() > 0) {
+                temp = (char) fi.read();
+                build.append(temp);
+                if(temp == '\"')
+                    do{
+                        temp = (char) fi.read();
+                        if(temp == ','){
+                            temp = (char) fi.read();
+                        }
+                        build.append(temp);
+                    }while(temp != '\"');
+                if(temp == '\n') {
+                    temp = ',';
+                    build.append(temp);
+                }
+            }
+
+            //writes to a temporary file
+            fi.close();
+            return build.toString();
+
+        }
+        catch (IOException e){
+            e.fillInStackTrace();
+            return "A problem was encountered while reading the file";
         }
     }
 
     //Reads the file line by line
-    public ArrayList<String> readByLine(){
-        String rec;
-
-        this.fileOpen();
+    public ArrayList <String> stringToArray(String temp){
         ArrayList <String> re = new ArrayList<>();
-
-        while (readF.hasNextLine())
-        {
-            rec = readF.nextLine();
-            Collections.addAll(re, rec.split(","));
-        }
-
-        for(int i = 0 ;i<re.size();i++) {
-            if (re.get(i).contains("\"")) {
-
-                re.set(i, re.get(i) + re.get(i + 1));
-                //For numbers like "8,123,123"
-                if(re.get(i+2).contains("\"")) {
-                    re.set(i, re.get(i) + re.get(i + 2));
-                    re.remove(i+2);
-                }
-                re.remove(i + 1);
-                re.set(i, this.clean(re.get(i)));
+        int len = temp.length();
+        //remove quotes
+        for (int i =0 ; i< len;i++) {
+            char ch = temp.charAt ( i );
+            if(ch == '\"') {
+                temp = temp.substring(0, i) + temp.substring(i + 1);
+                len--;
             }
-            //System.out.println(re.get(i));
         }
-
-        readF.close();
+        //Split the string into smaller strings that are put in a arrayList
+        Collections.addAll(re, temp.split(","));
         return re;
-    }
-
-    //Returns the element after it deletes
-    //the white spaces from the beginning and end
-    //and deletes the quotes
-    private String clean(String element){
-        return element.replace("\"", "").trim();
-    }
-
-    //first attempt of reading the file, does not work
-    // uses the readdata function
-    private void readByElement(){
-        //Nested declaration so i don't have to use any variables
-        //I want to read from file Open-data
-        this.fileOpen();
-        String PID= "", name= "", mainResearcher= "", school= "";
-        String title= "", startDate= "", endDate= "", Commitment= "";
-
-        readF.useDelimiter(",");
-
-        while( readF.hasNext() )
-        {
-            PID = readF.next();
-            name= readF.next();
-            mainResearcher= readF.next();
-            school= readData();
-            title= readData();
-            startDate= readF.next();
-            endDate= readF.next();
-            Commitment= readData();
-        }
-        readF.close();
-    }
-
-    //Reads until it encounters a column
-    //Reads 2 fields if it encounters a quote(")
-    // Ex: "543,123" is read as one "field"
-    private String readData(){
-        String el = readF.next();
-
-        if( el.contains("\"")) {
-            el += readF.next();
-        }
-        return el;
     }
 }
